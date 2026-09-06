@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -27,6 +27,35 @@ function renderApp() {
   );
 }
 
+function persistEmployeeToken() {
+  localStorage.setItem(
+    TOKEN_STORAGE_KEY,
+    token({
+      sub: "10000000-0000-4000-8000-000000000002",
+      roles: ["EMPLOYEE"],
+      mgr: "10000000-0000-4000-8000-000000000001",
+      email: "ada@atlas.dev",
+      iat: 1,
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    }),
+  );
+}
+
+const currentEmployee = {
+  id: "10000000-0000-4000-8000-000000000002",
+  email: "ada@atlas.dev",
+  full_name: "Ada Lovelace",
+  grade: "IC4",
+  cost_center: "CC-100",
+  manager_id: "10000000-0000-4000-8000-000000000001",
+  home_currency: "GBP",
+  pto_entitlement_days: 22,
+  status: "ACTIVE",
+  roles: ["EMPLOYEE"],
+  created_at: "2026-09-06T12:00:00Z",
+  updated_at: "2026-09-06T12:00:00Z",
+};
+
 describe("App", () => {
   beforeEach(() => {
     localStorage.clear();
@@ -40,41 +69,134 @@ describe("App", () => {
   });
 
   it("renders the protected shell for a persisted session", async () => {
-    localStorage.setItem(
-      TOKEN_STORAGE_KEY,
-      token({
-        sub: "10000000-0000-4000-8000-000000000002",
-        roles: ["EMPLOYEE"],
-        mgr: "10000000-0000-4000-8000-000000000001",
-        email: "ada@atlas.dev",
-        iat: 1,
-        exp: Math.floor(Date.now() / 1000) + 3600,
-      }),
-    );
+    persistEmployeeToken();
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          id: "10000000-0000-4000-8000-000000000002",
-          email: "ada@atlas.dev",
-          full_name: "Ada Lovelace",
-          grade: "IC4",
-          cost_center: "CC-100",
-          manager_id: "10000000-0000-4000-8000-000000000001",
-          home_currency: "GBP",
-          pto_entitlement_days: 22,
-          status: "ACTIVE",
-          roles: ["EMPLOYEE"],
-          created_at: "2026-09-06T12:00:00Z",
-          updated_at: "2026-09-06T12:00:00Z",
-        }),
-        { headers: { "Content-Type": "application/json" }, status: 200 },
-      ),
+      new Response(JSON.stringify(currentEmployee), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      }),
     );
 
     renderApp();
     expect(
       await screen.findByRole("heading", { name: "Welcome, Ada Lovelace" }),
     ).toBeInTheDocument();
+  });
+
+  it("renders the timesheet workspace", async () => {
+    persistEmployeeToken();
+    window.history.replaceState({}, "", "/time");
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const url = input instanceof Request ? input.url : String(input);
+      const body = url.includes("/identity/me")
+        ? currentEmployee
+        : url.includes("/pto/balance")
+          ? {
+              employee_id: currentEmployee.id,
+              entitlement_days: 22,
+              accrued_days: 0,
+              taken_days: 0,
+              pending_days: 0,
+              balance_days: 22,
+            }
+          : { items: [], total: 0 };
+      return new Response(JSON.stringify(body), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      });
+    });
+
+    renderApp();
+    expect(await screen.findByRole("heading", { name: "Timesheets" })).toBeInTheDocument();
+    expect(await screen.findByText("22 days")).toBeInTheDocument();
+    expect(await screen.findByText(/No timesheets yet/)).toBeInTheDocument();
+  });
+
+  it("saves edited timesheet entries before submitting", async () => {
+    persistEmployeeToken();
+    window.history.replaceState({}, "", "/time");
+    const mutationRequests: Request[] = [];
+    const timesheet = {
+      id: "20000000-0000-4000-8000-000000000001",
+      employee_id: currentEmployee.id,
+      period_start: "2026-09-07",
+      period_end: "2026-09-13",
+      status: "DRAFT",
+      total_hours: 8,
+      overtime_hours: 0,
+      entries: [
+        {
+          id: "30000000-0000-4000-8000-000000000001",
+          work_date: "2026-09-07",
+          hours: 8,
+          project_code: "ATLAS",
+          note: null,
+        },
+      ],
+      created_at: "2026-09-07T12:00:00Z",
+      updated_at: "2026-09-07T12:00:00Z",
+    };
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const request = input instanceof Request ? input : new Request(input);
+      const url = request.url;
+      if (request.method !== "GET") {
+        mutationRequests.push(request.clone());
+      }
+      const body = url.includes("/identity/me")
+        ? currentEmployee
+        : url.includes("/pto/balance")
+          ? {
+              employee_id: currentEmployee.id,
+              entitlement_days: 22,
+              accrued_days: 0,
+              taken_days: 0,
+              pending_days: 0,
+              balance_days: 22,
+            }
+          : url.endsWith("/submit")
+            ? { ...timesheet, status: "PENDING_APPROVAL", total_hours: 9 }
+            : request.method === "PUT"
+              ? { ...timesheet, total_hours: 9 }
+              : { items: [timesheet], total: 1 };
+      return new Response(JSON.stringify(body), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      });
+    });
+
+    renderApp();
+    const hours = await screen.findByRole("spinbutton", { name: "Hours" });
+    fireEvent.change(hours, { target: { value: "9" } });
+    fireEvent.click(screen.getByRole("button", { name: "Submit" }));
+
+    await vi.waitFor(() => expect(mutationRequests).toHaveLength(2));
+    expect(mutationRequests.map(({ method }) => method)).toEqual(["PUT", "POST"]);
+    await expect(mutationRequests[0]?.json()).resolves.toMatchObject({
+      entries: [{ hours: 9 }],
+    });
+  });
+
+  it("renders the expense workspace", async () => {
+    persistEmployeeToken();
+    window.history.replaceState({}, "", "/expenses");
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const url = input instanceof Request ? input.url : String(input);
+      const body = url.includes("/identity/me")
+        ? currentEmployee
+        : url.includes("/categories")
+          ? []
+          : { items: [], total: 0 };
+      return new Response(JSON.stringify(body), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      });
+    });
+
+    renderApp();
+    expect(
+      await screen.findByRole("heading", { name: "Expense reports" }),
+    ).toBeInTheDocument();
+    expect(await screen.findByText(/No expense reports yet/)).toBeInTheDocument();
   });
 
   it("clears employee API cache on sign out", async () => {

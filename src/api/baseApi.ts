@@ -43,5 +43,6 @@ const authenticatedBaseQuery: BaseQueryFn<
 export const baseApi = createApi({
   reducerPath: "api",
   baseQuery: authenticatedBaseQuery,
+  tagTypes: ["Timesheet", "ExpenseReport"],
   endpoints: () => ({}),
 });

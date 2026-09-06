@@ -13,15 +13,19 @@ import {
   Typography,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
+import { Link, Route, Routes, useLocation } from "react-router-dom";
 
 import { useCurrentUserQuery } from "../../api/identity";
 import type { RootState } from "../../store";
 import { signOut } from "../auth/authSlice";
+import { ExpensePage } from "../expense/ExpensePage";
+import { TimePage } from "../time/TimePage";
 
 const drawerWidth = 224;
 
 export function AppShell() {
   const dispatch = useDispatch();
+  const location = useLocation();
   const claims = useSelector((state: RootState) => state.auth.claims);
   const { data: employee, isLoading, error } = useCurrentUserQuery();
 
@@ -52,13 +56,21 @@ export function AppShell() {
         variant="permanent"
       >
         <List component="nav" aria-label="Primary navigation">
-          <ListItemButton selected>
+          <ListItemButton component={Link} selected={location.pathname === "/"} to="/">
             <ListItemText primary="Overview" />
           </ListItemButton>
-          <ListItemButton disabled>
+          <ListItemButton
+            component={Link}
+            selected={location.pathname.startsWith("/time")}
+            to="/time"
+          >
             <ListItemText primary="Time" />
           </ListItemButton>
-          <ListItemButton disabled>
+          <ListItemButton
+            component={Link}
+            selected={location.pathname.startsWith("/expenses")}
+            to="/expenses"
+          >
             <ListItemText primary="Expenses" />
           </ListItemButton>
           {claims?.roles.includes("MANAGER") ? (
@@ -74,23 +86,36 @@ export function AppShell() {
         </List>
       </Drawer>
       <Box component="main" sx={{ bgcolor: "background.default", flexGrow: 1, p: 4, pt: 12 }}>
-        {isLoading ? <CircularProgress aria-label="Loading employee profile" /> : null}
-        {error ? (
-          <Alert severity="error">Unable to load your employee profile.</Alert>
-        ) : null}
-        {employee ? (
-          <Stack spacing={1}>
-            <Typography color="text.secondary" variant="overline">
-              Employee workspace
-            </Typography>
-            <Typography component="h1" variant="h4">
-              Welcome, {employee.full_name}
-            </Typography>
-            <Typography color="text.secondary">
-              {employee.cost_center} · {employee.roles.join(", ")}
-            </Typography>
-          </Stack>
-        ) : null}
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <>
+                {isLoading ? (
+                  <CircularProgress aria-label="Loading employee profile" />
+                ) : null}
+                {error ? (
+                  <Alert severity="error">Unable to load your employee profile.</Alert>
+                ) : null}
+                {employee ? (
+                  <Stack spacing={1}>
+                    <Typography color="text.secondary" variant="overline">
+                      Employee workspace
+                    </Typography>
+                    <Typography component="h1" variant="h4">
+                      Welcome, {employee.full_name}
+                    </Typography>
+                    <Typography color="text.secondary">
+                      {employee.cost_center} · {employee.roles.join(", ")}
+                    </Typography>
+                  </Stack>
+                ) : null}
+              </>
+            }
+          />
+          <Route path="/time" element={<TimePage />} />
+          <Route path="/expenses" element={<ExpensePage />} />
+        </Routes>
       </Box>
     </Box>
   );
