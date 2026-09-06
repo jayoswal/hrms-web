@@ -11,10 +11,11 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "vitest run",
-    "gen:api": "npm run gen:api:identity && npm run gen:api:time && npm run gen:api:expense",
+    "gen:api": "npm run gen:api:identity && npm run gen:api:time && npm run gen:api:expense && npm run gen:api:workflow",
     "gen:api:identity": "openapi-typescript ../platform-outerloop/contracts/openapi/identity.v1.yaml -o src/api/generated/identity.ts",
     "gen:api:time": "openapi-typescript ../platform-outerloop/contracts/openapi/time.v1.yaml -o src/api/generated/time.ts",
-    "gen:api:expense": "openapi-typescript ../platform-outerloop/contracts/openapi/expense.v1.yaml -o src/api/generated/expense.ts"
+    "gen:api:expense": "openapi-typescript ../platform-outerloop/contracts/openapi/expense.v1.yaml -o src/api/generated/expense.ts",
+    "gen:api:workflow": "openapi-typescript ../platform-outerloop/contracts/openapi/workflow.v1.yaml -o src/api/generated/workflow.ts"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

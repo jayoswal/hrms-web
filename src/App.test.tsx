@@ -199,6 +199,67 @@ describe("App", () => {
     expect(await screen.findByText(/No expense reports yet/)).toBeInTheDocument();
   });
 
+  it("renders the approvals queue for a manager and lets them decide", async () => {
+    localStorage.setItem(
+      TOKEN_STORAGE_KEY,
+      token({
+        sub: "10000000-0000-4000-8000-000000000001",
+        roles: ["MANAGER"],
+        mgr: null,
+        email: "grace@atlas.dev",
+        iat: 1,
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      }),
+    );
+    window.history.replaceState({}, "", "/approvals");
+    const managerEmployee = {
+      ...currentEmployee,
+      id: "10000000-0000-4000-8000-000000000001",
+      email: "grace@atlas.dev",
+      full_name: "Grace Hopper",
+      manager_id: null,
+      roles: ["MANAGER"],
+    };
+    const approval = {
+      id: "40000000-0000-4000-8000-000000000001",
+      subject_type: "TIMESHEET",
+      subject_id: "20000000-0000-4000-8000-000000000001",
+      requester_id: "10000000-0000-4000-8000-000000000002",
+      approver_id: managerEmployee.id,
+      status: "PENDING",
+      reason: null,
+      policy_flags: [{ type: "OVERTIME_THRESHOLD", message: "Overtime of 45h exceeds cap." }],
+      created_at: "2026-09-07T12:00:00Z",
+      decided_at: null,
+    };
+    const mutationRequests: Request[] = [];
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const request = input instanceof Request ? input : new Request(input);
+      const url = request.url;
+      if (request.method !== "GET") {
+        mutationRequests.push(request.clone());
+      }
+      const body = url.includes("/identity/me")
+        ? managerEmployee
+        : url.includes("/decision")
+          ? { ...approval, status: "APPROVED", decided_at: "2026-09-07T13:00:00Z" }
+          : { items: [approval], total: 1 };
+      return new Response(JSON.stringify(body), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      });
+    });
+
+    renderApp();
+    expect(await screen.findByRole("heading", { name: "Approvals" })).toBeInTheDocument();
+    expect(await screen.findByText(/Overtime of 45h exceeds cap/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+    await vi.waitFor(() => expect(mutationRequests).toHaveLength(1));
+    expect(mutationRequests[0]?.method).toBe("POST");
+    await expect(mutationRequests[0]?.json()).resolves.toMatchObject({ decision: "APPROVE" });
+  });
+
   it("clears employee API cache on sign out", async () => {
     const store = makeStore();
     const employee: CurrentUser = {

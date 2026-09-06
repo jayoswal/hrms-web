@@ -20,6 +20,7 @@ import type { RootState } from "../../store";
 import { signOut } from "../auth/authSlice";
 import { ExpensePage } from "../expense/ExpensePage";
 import { TimePage } from "../time/TimePage";
+import { ApprovalsPage } from "../workflow/ApprovalsPage";
 
 const drawerWidth = 224;
 
@@ -73,8 +74,12 @@ export function AppShell() {
           >
             <ListItemText primary="Expenses" />
           </ListItemButton>
-          {claims?.roles.includes("MANAGER") ? (
-            <ListItemButton disabled>
+          {claims?.roles.includes("MANAGER") || claims?.roles.includes("FINANCE") ? (
+            <ListItemButton
+              component={Link}
+              selected={location.pathname.startsWith("/approvals")}
+              to="/approvals"
+            >
               <ListItemText primary="Approvals" />
             </ListItemButton>
           ) : null}
@@ -115,6 +120,7 @@ export function AppShell() {
           />
           <Route path="/time" element={<TimePage />} />
           <Route path="/expenses" element={<ExpensePage />} />
+          <Route path="/approvals" element={<ApprovalsPage />} />
         </Routes>
       </Box>
     </Box>
