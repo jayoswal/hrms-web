@@ -17,6 +17,7 @@ import { Link, Route, Routes, useLocation } from "react-router-dom";
 
 import { useCurrentUserQuery } from "../../api/identity";
 import type { RootState } from "../../store";
+import { CreateEmployeePage } from "../admin/CreateEmployeePage";
 import { signOut } from "../auth/authSlice";
 import { ExpensePage } from "../expense/ExpensePage";
 import { TimePage } from "../time/TimePage";
@@ -84,7 +85,11 @@ export function AppShell() {
             </ListItemButton>
           ) : null}
           {claims?.roles.includes("HR_ADMIN") ? (
-            <ListItemButton disabled>
+            <ListItemButton
+              component={Link}
+              selected={location.pathname.startsWith("/employees")}
+              to="/employees"
+            >
               <ListItemText primary="Employees" />
             </ListItemButton>
           ) : null}
@@ -121,6 +126,7 @@ export function AppShell() {
           <Route path="/time" element={<TimePage />} />
           <Route path="/expenses" element={<ExpensePage />} />
           <Route path="/approvals" element={<ApprovalsPage />} />
+          <Route path="/employees" element={<CreateEmployeePage />} />
         </Routes>
       </Box>
     </Box>

@@ -106,6 +106,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/expense/profiles/{employee_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                employee_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getExpenseProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -180,6 +198,14 @@ export interface components {
         ExpenseReportList: {
             items: components["schemas"]["ExpenseReport"][];
             total: number;
+        };
+        Profile: {
+            /** Format: uuid */
+            employee_id: string;
+            status: string;
+            /** Format: uuid */
+            manager_id: string | null;
+            home_currency: string;
         };
         ErrorDetail: {
             field: string;
@@ -414,6 +440,30 @@ export interface operations {
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
             422: components["responses"]["Error"];
+        };
+    };
+    getExpenseProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                employee_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Provisioned expense profile */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
         };
     };
 }

@@ -1,8 +1,8 @@
 import "@testing-library/jest-dom/vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { App } from "./App";
 import { identityApi, type CurrentUser } from "./api/identity";
@@ -61,6 +61,10 @@ describe("App", () => {
     localStorage.clear();
     window.history.replaceState({}, "", "/");
     vi.restoreAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
   });
 
   it("redirects an unauthenticated user to login", async () => {
@@ -258,6 +262,99 @@ describe("App", () => {
     await vi.waitFor(() => expect(mutationRequests).toHaveLength(1));
     expect(mutationRequests[0]?.method).toBe("POST");
     await expect(mutationRequests[0]?.json()).resolves.toMatchObject({ decision: "APPROVE" });
+  });
+
+  it("lets an HR admin create an employee and see provisioning resolve", async () => {
+    localStorage.setItem(
+      TOKEN_STORAGE_KEY,
+      token({
+        sub: "10000000-0000-4000-8000-000000000003",
+        roles: ["HR_ADMIN"],
+        mgr: null,
+        email: "hr@atlas.dev",
+        iat: 1,
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      }),
+    );
+    window.history.replaceState({}, "", "/employees");
+    const hrAdmin = {
+      ...currentEmployee,
+      id: "10000000-0000-4000-8000-000000000003",
+      email: "hr@atlas.dev",
+      full_name: "Hedy Rich",
+      manager_id: null,
+      roles: ["HR_ADMIN"],
+    };
+    const newEmployeeId = "50000000-0000-4000-8000-000000000001";
+    const profileAttempts = { expense: 0, time: 0 };
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const request = input instanceof Request ? input : new Request(input);
+      const url = request.url;
+      if (url.includes("/identity/me")) {
+        return new Response(JSON.stringify(hrAdmin), {
+          headers: { "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+      if (url.includes("/identity/employees")) {
+        return new Response(
+          JSON.stringify({
+            ...currentEmployee,
+            id: newEmployeeId,
+            email: "new.hire@atlas.dev",
+            full_name: "New Hire",
+            roles: ["EMPLOYEE"],
+            provisioning: "PROVISIONING",
+          }),
+          { headers: { "Content-Type": "application/json" }, status: 201 },
+        );
+      }
+      if (url.includes("/time/profiles/")) {
+        profileAttempts.time += 1;
+        if (profileAttempts.time < 2) {
+          return new Response(JSON.stringify({ code: "TIME_PROFILE_NOT_FOUND" }), {
+            headers: { "Content-Type": "application/json" },
+            status: 404,
+          });
+        }
+        return new Response(
+          JSON.stringify({ employee_id: newEmployeeId, status: "ACTIVE", manager_id: null, pto_entitlement_days: 15 }),
+          { headers: { "Content-Type": "application/json" }, status: 200 },
+        );
+      }
+      if (url.includes("/expense/profiles/")) {
+        profileAttempts.expense += 1;
+        if (profileAttempts.expense < 2) {
+          return new Response(JSON.stringify({ code: "EXPENSE_PROFILE_NOT_FOUND" }), {
+            headers: { "Content-Type": "application/json" },
+            status: 404,
+          });
+        }
+        return new Response(JSON.stringify({ employee_id: newEmployeeId, status: "ACTIVE", manager_id: null, home_currency: "USD" }), {
+          headers: { "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+      throw new Error(`Unexpected request: ${url}`);
+    });
+
+    renderApp();
+    expect(await screen.findByRole("heading", { name: "Create employee" })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/^Email/), {
+      target: { value: "new.hire@atlas.dev" },
+    });
+    fireEvent.change(screen.getByLabelText(/^Full name/), { target: { value: "New Hire" } });
+    fireEvent.change(screen.getByLabelText(/^Grade/), { target: { value: "IC1" } });
+    fireEvent.change(screen.getByLabelText(/^Cost center/), { target: { value: "CC-200" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create employee" }));
+
+    expect(await screen.findByText("Time profile provisioning…")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Employee fully provisioned across Time and Expense.", {},
+        { timeout: 5000 },
+      ),
+    ).toBeInTheDocument();
   });
 
   it("clears employee API cache on sign out", async () => {

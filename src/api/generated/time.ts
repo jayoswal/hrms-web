@@ -88,6 +88,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/time/profiles/{employee_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                employee_id: string;
+            };
+            cookie?: never;
+        };
+        get: operations["getTimeProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -156,6 +174,14 @@ export interface components {
             taken_days: number;
             pending_days: number;
             balance_days: number;
+        };
+        Profile: {
+            /** Format: uuid */
+            employee_id: string;
+            status: string;
+            /** Format: uuid */
+            manager_id: string | null;
+            pto_entitlement_days: number;
         };
         ErrorDetail: {
             field: string;
@@ -363,6 +389,30 @@ export interface operations {
                 };
             };
             401: components["responses"]["Error"];
+        };
+    };
+    getTimeProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                employee_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Provisioned time profile */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
         };
     };
 }

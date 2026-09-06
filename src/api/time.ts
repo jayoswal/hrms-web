@@ -7,6 +7,7 @@ export type TimesheetUpdate = components["schemas"]["TimesheetUpdate"];
 export type TimeEntryInput = components["schemas"]["TimeEntryInput"];
 export type TimesheetList = components["schemas"]["TimesheetList"];
 export type PtoBalance = components["schemas"]["PtoBalance"];
+export type TimeProfile = components["schemas"]["Profile"];
 
 export const timeApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -46,6 +47,9 @@ export const timeApi = baseApi.injectEndpoints({
     ptoBalance: builder.query<PtoBalance, void>({
       query: () => "/api/v1/time/pto/balance",
     }),
+    getTimeProfile: builder.query<TimeProfile, string>({
+      query: (employeeId) => `/api/v1/time/profiles/${employeeId}`,
+    }),
   }),
 });
 
@@ -55,4 +59,5 @@ export const {
   useUpdateTimesheetMutation,
   useSubmitTimesheetMutation,
   usePtoBalanceQuery,
+  useGetTimeProfileQuery,
 } = timeApi;

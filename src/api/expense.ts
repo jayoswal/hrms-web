@@ -7,6 +7,7 @@ export type ExpenseReport = components["schemas"]["ExpenseReport"];
 export type ExpenseReportCreate = components["schemas"]["ExpenseReportCreate"];
 export type ExpenseReportUpdate = components["schemas"]["ExpenseReportUpdate"];
 export type ExpenseReportList = components["schemas"]["ExpenseReportList"];
+export type ExpenseProfile = components["schemas"]["Profile"];
 
 export const expenseApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -69,6 +70,9 @@ export const expenseApi = baseApi.injectEndpoints({
         "ExpenseReport",
       ],
     }),
+    getExpenseProfile: builder.query<ExpenseProfile, string>({
+      query: (employeeId) => `/api/v1/expense/profiles/${employeeId}`,
+    }),
   }),
 });
 
@@ -79,4 +83,5 @@ export const {
   useUpdateExpenseReportMutation,
   useAddExpenseLineMutation,
   useSubmitExpenseReportMutation,
+  useGetExpenseProfileQuery,
 } = expenseApi;
