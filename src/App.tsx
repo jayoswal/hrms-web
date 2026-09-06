@@ -1,20 +1,29 @@
-import { Container, CssBaseline, Stack, Typography } from "@mui/material";
+import { CssBaseline, ThemeProvider } from "@mui/material";
+import { useSelector } from "react-redux";
+import { Navigate, Route, Routes } from "react-router-dom";
+
+import { LoginPage } from "./features/auth/LoginPage";
+import { AppShell } from "./features/shell/AppShell";
+import type { RootState } from "./store";
+import { theme } from "./theme";
 
 export function App() {
+  const token = useSelector((state: RootState) => state.auth.token);
+
   return (
-    <>
+    <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Container component="main" maxWidth="md">
-        <Stack spacing={2} sx={{ py: 8 }}>
-          <Typography component="h1" variant="h2">
-            Atlas HRMS
-          </Typography>
-          <Typography color="text.secondary">
-            The local polyrepo estate is ready for P1 identity and authentication.
-          </Typography>
-        </Stack>
-      </Container>
-    </>
+      <Routes>
+        <Route
+          path="/login"
+          element={token ? <Navigate replace to="/" /> : <LoginPage />}
+        />
+        <Route
+          path="/*"
+          element={token ? <AppShell /> : <Navigate replace to="/login" />}
+        />
+      </Routes>
+    </ThemeProvider>
   );
 }
 
