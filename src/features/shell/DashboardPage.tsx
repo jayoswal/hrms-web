@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 
 import { useCurrentUserQuery } from "../../api/identity";
-import { ActivityFeed, type ActivityItem } from "../../components/ActivityFeed";
+import { ActivityDataGrid, type ActivityRow } from "../../components/ActivityDataGrid";
 import { PageHeader } from "../../components/PageHeader";
 import { StatCard } from "../../components/StatCard";
 import { StaticBarChart } from "../../components/StaticCharts";
@@ -33,34 +33,48 @@ const HEADCOUNT_TREND = [
   { label: "Sep", value: 158 },
 ];
 
-const SAMPLE_ACTIVITY: ActivityItem[] = [
+const SAMPLE_ACTIVITY: ActivityRow[] = [
   {
     id: "sample-1",
     actor: "Grace Hopper",
-    action: "approved a timesheet for Ada Lovelace",
+    action: "Approved a timesheet for Ada Lovelace",
     timestamp: "Today · 09:14",
-    kind: "approval",
+    kind: "Approval",
   },
   {
     id: "sample-2",
     actor: "Ada Lovelace",
-    action: "submitted an expense report for travel",
+    action: "Submitted an expense report for travel",
     timestamp: "Today · 08:52",
-    kind: "expense",
+    kind: "Expense",
   },
   {
     id: "sample-3",
     actor: "Finance",
-    action: "flagged an overtime policy exception",
+    action: "Flagged an overtime policy exception",
     timestamp: "Yesterday · 17:30",
-    kind: "time",
+    kind: "Time",
   },
   {
     id: "sample-4",
     actor: "HR Admin",
-    action: "provisioned a new employee record",
+    action: "Provisioned a new employee record",
     timestamp: "Yesterday · 11:05",
-    kind: "employee",
+    kind: "Employee",
+  },
+  {
+    id: "sample-5",
+    actor: "Grace Hopper",
+    action: "Approved an expense report for office supplies",
+    timestamp: "Yesterday · 10:12",
+    kind: "Approval",
+  },
+  {
+    id: "sample-6",
+    actor: "Ada Lovelace",
+    action: "Submitted a timesheet for last week",
+    timestamp: "Mon · 16:40",
+    kind: "Time",
   },
 ];
 
@@ -120,7 +134,7 @@ export function DashboardPage() {
               <StaticBarChart data={HEADCOUNT_TREND} title="Headcount growth (illustrative)" />
             </Grid>
             <Grid item md={5} xs={12}>
-              <ActivityFeed items={SAMPLE_ACTIVITY} title="Recent activity (illustrative)" />
+              <ActivityDataGrid rows={SAMPLE_ACTIVITY} title="Recent activity (illustrative)" />
             </Grid>
           </Grid>
           <Divider />

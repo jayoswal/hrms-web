@@ -1,4 +1,6 @@
 import ApprovalOutlinedIcon from "@mui/icons-material/ApprovalOutlined";
+import Brightness4OutlinedIcon from "@mui/icons-material/Brightness4Outlined";
+import Brightness7OutlinedIcon from "@mui/icons-material/Brightness7Outlined";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
@@ -38,6 +40,7 @@ import { signOut } from "../auth/authSlice";
 import { ExpensePage } from "../expense/ExpensePage";
 import { TimePage } from "../time/TimePage";
 import { ApprovalsPage } from "../workflow/ApprovalsPage";
+import { useColorMode } from "../../theme-mode/ColorModeContext";
 import { DashboardPage } from "./DashboardPage";
 
 const drawerWidth = 248;
@@ -57,6 +60,7 @@ export function AppShell() {
   const dispatch = useDispatch();
   const location = useLocation();
   const claims = useSelector((state: RootState) => state.auth.claims);
+  const { mode, toggleMode } = useColorMode();
   const [userMenuAnchor, setUserMenuAnchor] = useState<HTMLElement | null>(null);
   const [notificationsAnchor, setNotificationsAnchor] = useState<HTMLElement | null>(null);
 
@@ -125,6 +129,15 @@ export function AppShell() {
               <Badge color="error" variant="dot">
                 <NotificationsNoneOutlinedIcon />
               </Badge>
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
+            <IconButton aria-label="Toggle color mode" onClick={toggleMode}>
+              {mode === "dark" ? (
+                <Brightness7OutlinedIcon fontSize="small" />
+              ) : (
+                <Brightness4OutlinedIcon fontSize="small" />
+              )}
             </IconButton>
           </Tooltip>
           <Menu
@@ -255,7 +268,7 @@ export function AppShell() {
           </ListItemButton>
         </List>
       </Drawer>
-      <Box component="main" sx={{ bgcolor: "background.default", flexGrow: 1, p: 4, pt: 12 }}>
+      <Box component="main" sx={{ bgcolor: "background.default", flexGrow: 1, p: 3, pt: 11 }}>
         <Routes>
           <Route element={<DashboardPage />} path="/" />
           <Route element={<TimePage />} path="/time" />

@@ -33,8 +33,9 @@ export function LoginPage() {
       <Stack
         spacing={4}
         sx={{
-          background:
-            "linear-gradient(135deg, #16233B 0%, #2B4C7E 55%, #0EA5A0 130%)",
+          backgroundColor: "#101B2D",
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22'%3E%3Ccircle cx='2' cy='2' r='1.4' fill='%232B4C7E'/%3E%3C/svg%3E\")",
           color: "#FFFFFF",
           display: { md: "flex", xs: "none" },
           flex: 1,
@@ -120,7 +121,7 @@ export function LoginPage() {
               type="password"
               value={password}
             />
-            <Button disabled={isLoading} size="large" type="submit" variant="contained">
+            <Button disabled={isLoading} type="submit" variant="contained">
               {isLoading ? "Signing in…" : "Sign in"}
             </Button>
           </Stack>
