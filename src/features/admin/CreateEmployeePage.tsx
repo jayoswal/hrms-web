@@ -9,6 +9,9 @@ import {
   CircularProgress,
   FormControlLabel,
   FormGroup,
+  Step,
+  StepLabel,
+  Stepper,
   Stack,
   TextField,
   Typography,
@@ -18,8 +21,13 @@ import { type FormEvent, useState } from "react";
 import { type EmployeeCreate, useCreateEmployeeMutation } from "../../api/identity";
 import { useGetExpenseProfileQuery } from "../../api/expense";
 import { useGetTimeProfileQuery } from "../../api/time";
+import { PageHeader } from "../../components/PageHeader";
 
 const ROLE_OPTIONS: EmployeeCreate["roles"] = ["EMPLOYEE", "MANAGER", "FINANCE", "HR_ADMIN"];
+
+// Purely cosmetic step labels — the form below is still a single submit;
+// no multi-step behavior or validation gating has been added.
+const STEPS = ["Details", "Review", "Provisioning"];
 
 const emptyForm = {
   email: "",
@@ -112,9 +120,14 @@ export function CreateEmployeePage() {
 
   return (
     <Stack spacing={3} sx={{ maxWidth: 640 }}>
-      <Typography component="h1" variant="h4">
-        Create employee
-      </Typography>
+      <PageHeader eyebrow="Human resources" title="Create employee" />
+      <Stepper activeStep={createdId ? 2 : 0} sx={{ maxWidth: 480 }}>
+        {STEPS.map((step) => (
+          <Step key={step}>
+            <StepLabel>{step}</StepLabel>
+          </Step>
+        ))}
+      </Stepper>
       <Card variant="outlined">
         <CardContent>
           <Stack component="form" onSubmit={(event) => void submit(event)} spacing={2}>

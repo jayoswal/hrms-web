@@ -1,6 +1,6 @@
+import ScheduleOutlinedIcon from "@mui/icons-material/ScheduleOutlined";
 import {
   Alert,
-  Box,
   Button,
   Card,
   CardContent,
@@ -22,6 +22,8 @@ import {
   useSubmitTimesheetMutation,
   useUpdateTimesheetMutation,
 } from "../../api/time";
+import { PageHeader } from "../../components/PageHeader";
+import { StatCard } from "../../components/StatCard";
 
 function initialEntries(timesheet: Timesheet): TimeEntryInput[] {
   if (timesheet.entries.length > 0) {
@@ -183,23 +185,13 @@ export function TimePage() {
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography color="text.secondary" variant="overline">
-          My work
-        </Typography>
-        <Typography component="h1" variant="h4">
-          Timesheets
-        </Typography>
-      </Box>
+      <PageHeader eyebrow="My work" title="Timesheets" />
       {balance ? (
-        <Card variant="outlined">
-          <CardContent>
-            <Typography color="text.secondary" variant="body2">
-              PTO balance
-            </Typography>
-            <Typography variant="h5">{balance.balance_days} days</Typography>
-          </CardContent>
-        </Card>
+        <StatCard
+          icon={<ScheduleOutlinedIcon fontSize="small" />}
+          label="PTO balance"
+          value={`${balance.balance_days} days`}
+        />
       ) : null}
       <Card variant="outlined">
         <CardContent>

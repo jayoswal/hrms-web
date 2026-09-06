@@ -1,6 +1,5 @@
 import {
   Alert,
-  Box,
   Button,
   Card,
   CardContent,
@@ -18,6 +17,7 @@ import {
   useDecideApprovalMutation,
   useListApprovalsQuery,
 } from "../../api/workflow";
+import { PageHeader } from "../../components/PageHeader";
 
 const STATUS_COLOR: Record<string, "default" | "success" | "error"> = {
   PENDING: "default",
@@ -77,14 +77,7 @@ export function ApprovalsPage() {
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography color="text.secondary" variant="overline">
-          My queue
-        </Typography>
-        <Typography component="h1" variant="h4">
-          Approvals
-        </Typography>
-      </Box>
+      <PageHeader eyebrow="My queue" title="Approvals" />
       <Divider />
       {isLoading ? <CircularProgress aria-label="Loading approvals" /> : null}
       {error ? <Alert severity="error">Unable to load approvals.</Alert> : null}

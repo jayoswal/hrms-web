@@ -1,6 +1,5 @@
 import {
   Alert,
-  Box,
   Button,
   Card,
   CardContent,
@@ -24,6 +23,7 @@ import {
   useSubmitExpenseReportMutation,
   useUpdateExpenseReportMutation,
 } from "../../api/expense";
+import { PageHeader } from "../../components/PageHeader";
 
 function DraftExpenseEditor({
   report,
@@ -162,14 +162,7 @@ export function ExpensePage() {
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography color="text.secondary" variant="overline">
-          My work
-        </Typography>
-        <Typography component="h1" variant="h4">
-          Expense reports
-        </Typography>
-      </Box>
+      <PageHeader eyebrow="My work" title="Expense reports" />
       <Card variant="outlined">
         <CardContent>
           <Stack component="form" direction={{ sm: "row" }} onSubmit={createDraft} spacing={2}>
